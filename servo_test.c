@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-//PWM Driver Test
+//PWM Driver Address
 #define PWMI2CADDRESS 0x40
 
 #define PCA9685_SUBADR1 0x2
@@ -24,11 +24,15 @@
 #define ALLLED_OFF_L 0xFC
 #define ALLLED_OFF_H 0xFD
 
-
+// Prototypes
 void reset();
+void setPWM(uint8_t num, uint16_t on, uint16_t off);
+void setPWMFreq(float freq);
 
+// Variables
 int fileDescriptor = -1;
 
+// MAIN
 int main() {
 
 	// Setting up Wiring Pi
