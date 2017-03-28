@@ -7,6 +7,9 @@
 //PWM Driver Address
 #define PWMI2CADDRESS 0x40
 
+#define SERVOMIN 150
+#define SERVOMAX 600
+
 #define PCA9685_SUBADR1 0x2
 #define PCA9685_SUBADR2 0x3
 #define PCA9685_SUBADR3 0x4
@@ -31,6 +34,7 @@ void setPWMFreq(float freq);
 
 // Variables
 int fileDescriptor = -1;
+int pulse;
 
 // MAIN
 int main() {
@@ -53,11 +57,26 @@ int main() {
 	uint8_t oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
 	printf("old mode - %d\n", oldmode);
 
-	wiringPiI2CWriteReg8(fileDescriptor, PCA9685_MODE1, 0x0); // reset
+	reset();
 
 	//i2c test
-	uint8_t oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
+	oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
 	printf("old mode - %d\n", oldmode);
+
+	setPWMFreq(60);
+
+	// Main Loops
+	pulse = SERVOMIN;
+	for (pulse < SERVOMAX; pulse++) {
+		setPWM(0, pulse);
+	}
+	delay(500);
+	pulse = SERVOMAX;
+	for (pulse > SERVOMIN; pulse--) {
+		setPWM(0, pulse)
+	};
+	delay(500);
+
 }
 
 
@@ -81,12 +100,11 @@ void setPWMFreq(float freq) {
 }
 
 
-void setPWM(uint8_t num, uint16_t on, uint16_t off) {
-  // WIRE.write(LED0_ON_L+4*num);
-  // WIRE.write(on);
-  // WIRE.write(on>>8);
-  // WIRE.write(off);
-  // WIRE.write(off>>8);
+void setPWM(uint16_t on, uint16_t off) {
+	wiringPiI2CWriteReg8(fileDescriptor, LED0_ON_L, on & 0xFF);
+	wiringPiI2CWriteReg8(fileDescriptor, LED0_ON_H, on >> 8);
+	wiringPiI2CWriteReg8(fileDescriptor, LED0_OFF_L, on & 0xFF);
+	wiringPiI2CWriteReg8(fileDescriptor, LED0_OFF_H, on >> 8);
 }
 
 
