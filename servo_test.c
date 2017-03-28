@@ -52,6 +52,12 @@ int main() {
 	//i2c test
 	uint8_t oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
 	printf("old mode - %d\n", oldmode);
+
+	wiringPiI2CWriteReg8(fileDescriptor, PCA9685_MODE1, 0x0); // reset
+
+	//i2c test
+	uint8_t oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
+	printf("old mode - %d\n", oldmode);
 }
 
 
