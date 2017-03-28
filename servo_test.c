@@ -48,6 +48,10 @@ int main() {
 		printf("Could not find pwm driver\n");
 		exit(1);
 	} 
+
+	//i2c test
+	uint8_t oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
+	printf("old mode - %d\n", oldmode);
 }
 
 
