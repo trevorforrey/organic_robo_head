@@ -59,7 +59,7 @@ void setPWMFreq(float freq) {
  	prescaleval /= freq;
  	prescaleval -= 1;
 
- 	uint8_t prescale = floor(prescaleval + 0.5);
+ 	uint8_t prescale = (prescaleval + 0.5);
 
  	uint8_t oldmode = wiringPiI2CReadReg8(fileDescriptor, PCA9685_MODE1);
  	uint8_t newmode = (oldmode&0x7F) | 0x10; // sleep
