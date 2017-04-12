@@ -3,6 +3,8 @@
 #include <wiringPi.h>
 #include <stdlib.h>
 #include <stdio.h>
+//#include "cap1188.h"
+//#include "pca9685.h"
 
 // Head Position Type
 typedef struct HeadPosition {
@@ -113,11 +115,16 @@ void setPWM(uint8_t pwm_index, uint16_t on, uint16_t off);
 void setPWMFreq(float freq);
 
 // CAP 1188
-void cap1188info();
-void setUpLEDTouch();
-uint8_t touched();
+void cap1188info(int fd_cap);
+void setUpLEDTouch(int fd_cap);
+uint8_t touched(int fd_cap);
 
-//
+// MAIN PROTOTYPES
+void react(int zoneActivated);
+void moveFace(HeadPosition newPosition);
+void LEDReaction(int zone);
+void setColor(int red, int green, int blue);
+
 
 // Variables
 int fd_pwm = -1;
@@ -153,6 +160,8 @@ int main() {
 		exit(1);
 	} 
 
+	/////////// POSSIBLE JUNK CODE ////
+
 	//i2c test
 	uint8_t oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
 	printf("old mode - %d\n", oldmode);
@@ -163,17 +172,22 @@ int main() {
 	oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
 	printf("old mode - %d\n", oldmode);
 
+	////////////////////////////////////
+
 	setPWMFreq(60);
+
+	cap1188info(fd_cap);
+	setUpLEDTouch(fd_cap);
 
 	// Main Loop
 	while (1) {
 		if (touched(fd_cap)) {
-			printf("Touch detected on #1 - %d\n", touchedCaps);
+			printf("Touch detected on - %d\n", touchedCaps);
 			i = 0;
 			for (i; i < 8; i++) {
 				if (touchedCaps & (1 << i)) {
 					printf("%d touched, ", i);
-					react(i); // DONT THINK I IS A TRUE "ZONE" VALUE
+					//react(i); // DONT THINK I IS A TRUE "ZONE" VALUE
 				}
 				printf("\n"); //flush write buffer so all touched buttons print to term
 			}
