@@ -124,6 +124,9 @@ void react(int zoneActivated);
 void moveFace(HeadPosition newPosition);
 void LEDReaction(int zone);
 void setColor(int red, int green, int blue);
+HeadPosition getZoneHeadPosition(int zoneActived);
+void LEDDarken(int ledIndex);
+
 
 
 // Variables
@@ -250,8 +253,42 @@ void LEDReaction(int zone) {
 void graduallyLight(int ledIndex) {
 	uint16_t pulselen = 0;
 	for (pulselen; pulselen < 1000; pulselen++) {
-        pwm.setPWM(ledIndex, 0, pulselen);
+        setPWM(ledIndex, 0, pulselen);
     }
+}
+
+void LEDDarken(int ledIndex) {
+	uint16_t pulselen = 1000;
+	for (pulselen; pulselen >= 0; pulselen--) {
+        setPWM(ledIndex, 0, pulselen);
+    }
+}
+
+HeadPosition getZoneHeadPosition(int zoneActived) {
+	switch (zoneActived) {
+		HeadPosition newPosition = {0,0};
+		case 1:
+	      newPosition = ZONE1_DOWN;
+	      break;
+	    case 2:
+	      newPosition = ZONE2_DOWN;
+	      break;
+	    case 3:
+	      newPosition = ZONE3_DOWN;
+	      break;
+	    case 4:
+	      newPosition = ZONE4_DOWN;
+	      break;
+	    case 5:
+	      newPosition = ZONE5_DOWN;
+	      break;
+	    case 6:
+	      newPosition = ZONE6_DOWN;
+	      break;
+	    default:
+	      break;
+	}
+	return newPosition;
 }
 
 ///////// RGB LED FUNCTIONS ///////////
