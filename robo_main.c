@@ -16,19 +16,18 @@ typedef struct HeadPosition {
 // Pulse length counts
 #define HEADUP 225
 #define HEADDOWN 400
-#define HEADSTRAIGHT 340
+#define HEADSTRAIGHT 325
 
 #define NECKRIGHT 150
 #define NECKLEFT 500 
+#define NECKMIDDLE 330
 
 #define NECKZONE1 500
-#define NECKZONE2 457
-#define NECKZONE3 412
-#define NECKZONE4 325
-#define NECKZONE5 281
-#define NECKZONE6 237
-#define NECKZONE7 193
-#define NECKZONE8 150
+#define NECKZONE2 441
+#define NECKZONE3 383
+#define NECKZONE4 266
+#define NECKZONE5 208
+#define NECKZONE6 150
 
 
 ///////// LED DEFINES ////////////////
@@ -104,8 +103,6 @@ HeadPosition ZONE3_DOWN = {NECKZONE3,HEADDOWN};
 HeadPosition ZONE4_DOWN = {NECKZONE4,HEADDOWN};
 HeadPosition ZONE5_DOWN = {NECKZONE5,HEADDOWN};
 HeadPosition ZONE6_DOWN = {NECKZONE6,HEADDOWN};
-HeadPosition ZONE7_DOWN = {NECKZONE7,HEADDOWN};
-HeadPosition ZONE8_DOWN = {NECKZONE8,HEADDOWN};
 
 ///////// PROTOTYPES ///////////
 
@@ -182,15 +179,19 @@ int main() {
 	cap1188info(fd_cap);
 	setUpLEDTouch(fd_cap);
 
+        printf("Set up complete\n");
+
 	// Main Loop
 	while (1) {
+		
+		delay(500);
 		if (touched(fd_cap)) {
 			printf("Touch detected on - %d\n", touchedCaps);
 			i = 0;
 			for (i; i < 8; i++) {
 				if (touchedCaps & (1 << i)) {
 					printf("%d touched, ", i);
-					//react(i); // DONT THINK I IS A TRUE "ZONE" VALUE
+					react(i);
 				}
 				printf("\n"); //flush write buffer so all touched buttons print to term
 			}
@@ -204,20 +205,29 @@ int main() {
 
 void react(int zoneActivated) {
 
-  // Get zone, calculate head position and led chain to activate
-  HeadPosition newPosition = getZoneHeadPosition(zoneActived);
+  zoneActivated++;
 
-  LEDReaction(zoneActived);
+  // Get zone, calculate head position and led chain to activate
+  HeadPosition newPosition = getZoneHeadPosition(zoneActivated);
+
+  printf("Zone: %d\n", zoneActivated);
+  printf("headPosition: %d\n", newPosition.headPosition);
+  printf("neckPosition: %d\n", newPosition.neckPosition);
+
+  //LEDReaction(zoneActivated);
   delay(500); // delay could make it seem like the face reacted to the light ??
   moveFace(newPosition);
-  delay(3000);
-  LEDDarken(zoneActived);
-  // moveFace(middle position)
+  delay(1000);
+  //delay(600);
+  //LEDDarken(zoneActivated);
+  HeadPosition middlePosition = {NECKMIDDLE, HEADSTRAIGHT};
+  moveFace(middlePosition);
+  
 }
 
 
 void moveFace(HeadPosition newPosition) {
-
+  printf("move face called\n");
   setPWM(HEAD, 0, newPosition.headPosition);
   setPWM(NECK, 0, newPosition.neckPosition);  
 }
@@ -265,9 +275,9 @@ void LEDDarken(int ledIndex) {
 }
 
 HeadPosition getZoneHeadPosition(int zoneActived) {
+	HeadPosition newPosition = {0,0};
 	switch (zoneActived) {
-		HeadPosition newPosition = {0,0};
-		case 1:
+	    case 1:
 	      newPosition = ZONE1_DOWN;
 	      break;
 	    case 2:
@@ -357,10 +367,10 @@ void setPWMFreq(float freq) {
 
 
 void setPWM(uint8_t index, uint16_t on, uint16_t off) {
-	wiringPiI2CWriteReg8(fd_pwm, LED0_ON_L + 4 * number, on & 0xFF);
-	wiringPiI2CWriteReg8(fd_pwm, LED0_ON_H + 4 * number, on >> 8);
-	wiringPiI2CWriteReg8(fd_pwm, LED0_OFF_L + 4 * number, off & 0xFF);
-	wiringPiI2CWriteReg8(fd_pwm, LED0_OFF_H + 4 * number, off >> 8);
+	wiringPiI2CWriteReg8(fd_pwm, LED0_ON_L + 4 * index, on & 0xFF);
+	wiringPiI2CWriteReg8(fd_pwm, LED0_ON_H + 4 * index, on >> 8);
+	wiringPiI2CWriteReg8(fd_pwm, LED0_OFF_L + 4 * index, off & 0xFF);
+	wiringPiI2CWriteReg8(fd_pwm, LED0_OFF_H + 4 * index, off >> 8);
         
 }
 
