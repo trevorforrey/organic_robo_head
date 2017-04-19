@@ -19,7 +19,7 @@ typedef struct HeadPosition {
 #define HEADSTRAIGHT 325
 
 #define NECKRIGHT 150
-#define NECKLEFT 500 
+#define NECKLEFT 500
 #define NECKMIDDLE 330
 
 #define NECKZONE1 500
@@ -52,9 +52,6 @@ typedef struct HeadPosition {
 
 //PWM Driver Address
 #define PWMI2CADDRESS 0x40
-
-//#define SERVOMIN 150
-//#define SERVOMAX 500
 
 #define PCA9685_SUBADR1 0x2
 #define PCA9685_SUBADR2 0x3
@@ -107,7 +104,7 @@ HeadPosition ZONE6_DOWN = {NECKZONE6,HEADDOWN};
 ///////// PROTOTYPES ///////////
 
 // PCA 9685
-void reset();
+void resetPCA9685();
 void setPWM(uint8_t pwm_index, uint16_t on, uint16_t off);
 void setPWMFreq(float freq);
 
@@ -117,11 +114,13 @@ void setUpLEDTouch(int fd_cap);
 uint8_t touched(int fd_cap);
 
 // MAIN PROTOTYPES
+void setup();
 void react(int zoneActivated);
 void moveFace(HeadPosition newPosition);
 void LEDReaction(int zone);
 void setColor(int red, int green, int blue);
 HeadPosition getZoneHeadPosition(int zoneActived);
+int getLEDindex(int zoneActived);
 void LEDDarken(int ledIndex);
 
 
@@ -137,57 +136,14 @@ volatile uint8_t touchedCaps;
 int main() {
 
 	/////// Set Up ////////
-
-	// Setting up Wiring Pi
-	if (wiringPiSetup() == -1) {
-		printf("Wiring pi set up failure\n");
-		exit(1);
-	}
-
-	// Set up pwm file descriptor (i2c communication)
-	fd_pwm = wiringPiI2CSetup(PWMI2CADDRESS);
-	printf("fd - %d\n", fd_pwm);
-	if (fd_pwm  == -1) {
-		printf("Could not find pwm driver\n");
-		exit(1);
-	} 
-
-	// Set up file descriptor 1
-	fd_cap = wiringPiI2CSetup(CAP_I2C_ADDRESS);
-	printf("fd - %d\n", fd_cap);
-	if (fd_cap  == -1) {
-		printf("Could not find cap1188\n");
-		exit(1);
-	} 
-
-	/////////// POSSIBLE JUNK CODE ////
-
-	//i2c test
-	uint8_t oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
-	printf("old mode - %d\n", oldmode);
-
-	reset();
-
-	//i2c test
-	oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
-	printf("old mode - %d\n", oldmode);
-
-	////////////////////////////////////
-
-	setPWMFreq(60);
-
-	cap1188info(fd_cap);
-	setUpLEDTouch(fd_cap);
-
-        printf("Set up complete\n");
+  setup();
 
 	// Main Loop
 	while (1) {
-		
 		delay(500);
 		if (touched(fd_cap)) {
-			printf("Touch detected on - %d\n", touchedCaps);
-			i = 0;
+      printf("Touch detected on - %d\n", touchedCaps);
+      i = 0;
 			for (i; i < 8; i++) {
 				if (touchedCaps & (1 << i)) {
 					printf("%d touched, ", i);
@@ -207,71 +163,50 @@ void react(int zoneActivated) {
 
   zoneActivated++;
 
-  // Get zone, calculate head position and led chain to activate
+  // Get head position and LED index of activated zone
   HeadPosition newPosition = getZoneHeadPosition(zoneActivated);
+  int ledIndex = getLEDindex(zoneActivated);
 
   printf("Zone: %d\n", zoneActivated);
   printf("headPosition: %d\n", newPosition.headPosition);
   printf("neckPosition: %d\n", newPosition.neckPosition);
+  printf("led index: %d\n", ledIndex);
 
-  //LEDReaction(zoneActivated);
-  delay(500); // delay could make it seem like the face reacted to the light ??
+  LEDReaction(zoneActivated);
+  delay(500); // delay could make it seem like the face reacted to the light
   moveFace(newPosition);
-  delay(1000);
-  //delay(600);
-  //LEDDarken(zoneActivated);
+  delay(800);
+  LEDDarken(zoneActivated);
   HeadPosition middlePosition = {NECKMIDDLE, HEADSTRAIGHT};
   moveFace(middlePosition);
-  
+
 }
 
 
 void moveFace(HeadPosition newPosition) {
   printf("move face called\n");
   setPWM(HEAD, 0, newPosition.headPosition);
-  setPWM(NECK, 0, newPosition.neckPosition);  
+  setPWM(NECK, 0, newPosition.neckPosition);
 }
 
 
-void LEDReaction(int zone) {
-  // Will do logic after more construction of project
-  switch (zone) {
-    case 1:
-      graduallyLight(LED1);
-      break;
-    case 2:
-      graduallyLight(LED2);
-      break;
-    case 3:
-      graduallyLight(LED3);
-      break;
-    case 4:
-      graduallyLight(LED4);
-      break;
-    case 5:
-      graduallyLight(LED5);
-      break;
-    case 6:
-      graduallyLight(LED6);
-      break;
-    default:
-      break;
-  }  
+void LEDReaction(int ledIndex) {
+  graduallyLight(ledIndex);
 }
 
 
 void graduallyLight(int ledIndex) {
 	uint16_t pulselen = 0;
 	for (pulselen; pulselen < 1000; pulselen++) {
-        setPWM(ledIndex, 0, pulselen);
-    }
+      setPWM(ledIndex, 0, pulselen);
+  }
 }
 
 void LEDDarken(int ledIndex) {
 	uint16_t pulselen = 1000;
 	for (pulselen; pulselen >= 0; pulselen--) {
-        setPWM(ledIndex, 0, pulselen);
-    }
+      setPWM(ledIndex, 0, pulselen);
+  }
 }
 
 HeadPosition getZoneHeadPosition(int zoneActived) {
@@ -299,6 +234,79 @@ HeadPosition getZoneHeadPosition(int zoneActived) {
 	      break;
 	}
 	return newPosition;
+}
+
+int getLEDindex(int zoneActived) {
+  int ledIndex = 14; // set to unused index
+	switch (zoneActived) {
+    case 1:
+      ledIndex = LED_1;
+      break;
+    case 2:
+      ledIndex = LED_2;
+      break;
+    case 3:
+      ledIndex = LED_3;
+      break;
+    case 4:
+      ledIndex = LED_4;
+      break;
+    case 5:
+      ledIndex = LED_5;
+      break;
+    case 6:
+      ledIndex = LED_6;
+      break;
+    default:
+      break;
+	}
+	return ledIndex;
+}
+
+void setup() {
+
+  // Setting up Wiring Pi
+	if (wiringPiSetup() == -1) {
+		printf("Wiring pi set up failure\n");
+		exit(1);
+	}
+
+	// Set up pwm file descriptor (i2c communication)
+	fd_pwm = wiringPiI2CSetup(PWMI2CADDRESS);
+	printf("fd - %d\n", fd_pwm);
+	if (fd_pwm  == -1) {
+		printf("Could not find pca9685\n");
+		exit(1);
+	}
+
+	// Set up file descriptor 1
+	fd_cap = wiringPiI2CSetup(CAP_I2C_ADDRESS);
+	printf("fd - %d\n", fd_cap);
+	if (fd_cap  == -1) {
+		printf("Could not find cap1188\n");
+		exit(1);
+	}
+
+	/////////// POSSIBLE JUNK CODE ////
+
+	//i2c test
+	uint8_t oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
+	printf("old mode - %d\n", oldmode);
+
+	resetPCA9685();
+
+	//i2c test
+	oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
+	printf("old mode - %d\n", oldmode);
+
+	////////////////////////////////////
+
+	setPWMFreq(60);
+
+	cap1188info(fd_cap);
+	setUpLEDTouch(fd_cap);
+
+  printf("Set up complete\n");
 }
 
 ///////// RGB LED FUNCTIONS ///////////
@@ -371,20 +379,19 @@ void setPWM(uint8_t index, uint16_t on, uint16_t off) {
 	wiringPiI2CWriteReg8(fd_pwm, LED0_ON_H + 4 * index, on >> 8);
 	wiringPiI2CWriteReg8(fd_pwm, LED0_OFF_L + 4 * index, off & 0xFF);
 	wiringPiI2CWriteReg8(fd_pwm, LED0_OFF_H + 4 * index, off >> 8);
-        
 }
 
 
-void reset(void) {
+void resetPCA9685(void) {
 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_MODE1, 0x0);
 }
 
 ///////// CAP 1188 FUNCTIONS ///////////
 
 void cap1188info(int fd_cap) {
-	printf("Product Id Found - %d\n", wiringPiI2CReadReg8(fd_cap,CAP1188_PRODID));
-	printf("Manufac Id Found - %d\n", wiringPiI2CReadReg8(fd_cap,CAP1188_MANUID));
-	printf("Revision # Found - %d\n", wiringPiI2CReadReg8(fd_cap,CAP1188_REV));
+	printf("Product Id - %d\n", wiringPiI2CReadReg8(fd_cap,CAP1188_PRODID));
+	printf("Manufac Id - %d\n", wiringPiI2CReadReg8(fd_cap,CAP1188_MANUID));
+	printf("Revision # - %d\n", wiringPiI2CReadReg8(fd_cap,CAP1188_REV));
 }
 
 
@@ -402,9 +409,3 @@ uint8_t touched(int fd_cap) {
 	}
 	return touchedCaps;
 }
-
-
-
-
-
-
