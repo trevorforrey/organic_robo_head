@@ -38,12 +38,12 @@ typedef struct HeadPosition {
 ////// PWM index positions ///////////
 #define NECK 0
 #define HEAD 1
-#define LED1 2
-#define LED2 3
-#define LED3 4
-#define LED4 5
-#define LED5 6
-#define LED6 7
+#define LED_1 2
+#define LED_2 3
+#define LED_3 4
+#define LED_4 5
+#define LED_5 6
+#define LED_6 7
 #define LED_R 8
 #define LED_G 9
 #define LED_B 10
@@ -117,11 +117,12 @@ uint8_t touched(int fd_cap);
 void setup();
 void react(int zoneActivated);
 void moveFace(HeadPosition newPosition);
-void LEDReaction(int zone);
+void LEDReaction(int ledIndex);
 void setColor(int red, int green, int blue);
 HeadPosition getZoneHeadPosition(int zoneActived);
 int getLEDindex(int zoneActived);
 void LEDDarken(int ledIndex);
+void graduallyLight(int ledIndex);
 
 
 
@@ -130,6 +131,7 @@ int fd_pwm = -1;
 int fd_cap = -1;
 int pulse;
 int i;
+int numOfTurns = 1;
 volatile uint8_t touchedCaps;
 
 // MAIN
@@ -146,8 +148,12 @@ int main() {
       i = 0;
 			for (i; i < 8; i++) {
 				if (touchedCaps & (1 << i)) {
-					printf("%d touched, ", i);
-					react(i);
+                                        numOfTurns++;
+                                        if (numOfTurns % 2 == 0) {
+					  printf("%d touched, ", i);
+					  react(i);
+                                          printf("React Completed\n");
+                                        }
 				}
 				printf("\n"); //flush write buffer so all touched buttons print to term
 			}
@@ -172,19 +178,24 @@ void react(int zoneActivated) {
   printf("neckPosition: %d\n", newPosition.neckPosition);
   printf("led index: %d\n", ledIndex);
 
-  LEDReaction(zoneActivated);
-  delay(500); // delay could make it seem like the face reacted to the light
+  LEDReaction(ledIndex);
+  printf("LED's lit\n");
+  
+  //delay(500); // delay could make it seem like the face reacted to the light
   moveFace(newPosition);
-  delay(800);
-  LEDDarken(zoneActivated);
+  printf("Face has been moved\n");
+LEDDarken(ledIndex);
+  printf("LED's darkened\n");
+  delay(300);
   HeadPosition middlePosition = {NECKMIDDLE, HEADSTRAIGHT};
   moveFace(middlePosition);
+  printf("Face to middle\n");
 
 }
 
 
 void moveFace(HeadPosition newPosition) {
-  printf("move face called\n");
+  //printf("move face called\n");
   setPWM(HEAD, 0, newPosition.headPosition);
   setPWM(NECK, 0, newPosition.neckPosition);
 }
@@ -192,21 +203,24 @@ void moveFace(HeadPosition newPosition) {
 
 void LEDReaction(int ledIndex) {
   graduallyLight(ledIndex);
+  printf("got out of LEDReaction\n");
 }
 
 
 void graduallyLight(int ledIndex) {
 	uint16_t pulselen = 0;
-	for (pulselen; pulselen < 1000; pulselen++) {
-      setPWM(ledIndex, 0, pulselen);
-  }
+	for (pulselen; pulselen < 1000; pulselen += 2) {
+          setPWM(ledIndex, 0, pulselen);
+        }
 }
 
 void LEDDarken(int ledIndex) {
 	uint16_t pulselen = 1000;
-	for (pulselen; pulselen >= 0; pulselen--) {
-      setPWM(ledIndex, 0, pulselen);
-  }
+	for (pulselen; pulselen > 0; pulselen -= 2) {
+          setPWM(ledIndex, 0, pulselen);
+        }
+        setPWM(ledIndex, 0, 0);
+        printf("got out from darken for loop\n");
 }
 
 HeadPosition getZoneHeadPosition(int zoneActived) {
