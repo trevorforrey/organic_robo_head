@@ -17,7 +17,7 @@ void setUpLEDTouch(int fd_cap) {
 
 
 uint8_t touched(int fd_cap) {
-	touchedCaps = wiringPiI2CReadReg8(fd_cap,CAP1188_SENINPUTSTATUS);
+	uint8_t touchedCaps = wiringPiI2CReadReg8(fd_cap,CAP1188_SENINPUTSTATUS);
 	if (touched) {
 		wiringPiI2CWriteReg8(fd_cap,CAP1188_MAIN, wiringPiI2CReadReg8(fd_cap,CAP1188_MAIN) & ~CAP1188_MAIN_INT);
 	}

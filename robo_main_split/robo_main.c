@@ -3,57 +3,9 @@
 #include <wiringPi.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "robo_main.h"
 #include "cap1188.h"
 #include "pca9685.h"
-
-// Head Position Type
-typedef struct HeadPosition {
-    int neckPosition;
-    int headPosition;
-}HeadPosition;
-
-// Directions based on head's perspective
-// Pulse length counts
-#define HEADUP 225
-#define HEADDOWN 400
-#define HEADSTRAIGHT 325
-
-#define NECKRIGHT 150
-#define NECKLEFT 500
-#define NECKMIDDLE 330
-
-#define NECKZONE1 500
-#define NECKZONE2 441
-#define NECKZONE3 383
-#define NECKZONE4 266
-#define NECKZONE5 208
-#define NECKZONE6 150
-
-
-///////// LED DEFINES ////////////////
-#define LEDLOW 0
-#define LEDHIGH 1000
-
-//////// ZONE DEFINES ////////////////
-#define ZONE1 1
-#define ZONE2 2
-#define ZONE3 3
-#define ZONE4 4
-#define ZONE5 5
-#define ZONE6 6
-
-////// PWM index positions ///////////
-#define NECK 0
-#define HEAD 1
-#define LED_1 2
-#define LED_2 3
-#define LED_3 4
-#define LED_4 5
-#define LED_5 6
-#define LED_6 7
-#define LED_R 8
-#define LED_G 9
-#define LED_B 10
 
 // Head position structs
 HeadPosition RIGHT_DOWN = {NECKRIGHT,HEADDOWN};
@@ -67,28 +19,13 @@ HeadPosition ZONE4_DOWN = {NECKZONE4,HEADDOWN};
 HeadPosition ZONE5_DOWN = {NECKZONE5,HEADDOWN};
 HeadPosition ZONE6_DOWN = {NECKZONE6,HEADDOWN};
 
-///////// PROTOTYPES ///////////
-
-// MAIN PROTOTYPES
-void setup();
-void react(int zoneActivated);
-void moveFace(HeadPosition newPosition);
-void LEDReaction(int ledIndex);
-void setColor(int red, int green, int blue);
-HeadPosition getZoneHeadPosition(int zoneActived);
-int getLEDindex(int zoneActived);
-void LEDDarken(int ledIndex);
-void graduallyLight(int ledIndex);
-
-
-
 // Variables
 int fd_pwm = -1;
 int fd_cap = -1;
 int pulse;
-int i;
-int numOfTurns = 1;
-volatile uint8_t touchedCaps;
+int cap_node;
+int num_of_turns = 1;
+uint8_t touched_caps;
 
 // MAIN
 int main() {
@@ -99,15 +36,16 @@ int main() {
 	// Main Loop
 	while (1) {
 		delay(500);
-		if (touched(fd_cap)) {
-      printf("Touch detected on - %d\n", touchedCaps);
-      i = 0;
-			for (i; i < 8; i++) {
-				if (touchedCaps & (1 << i)) {
-          numOfTurns++;
-          if (numOfTurns % 2 == 0) {
+    touched_caps = touched(fd_cap);
+		if (touched_caps) {
+      printf("Touch detected on - %d\n", touched_caps);
+      cap_node = 0;
+			for (cap_node; cap_node < 8; cap_node++) {
+				if (touched_caps & (1 << cap_node)) {
+          num_of_turns++;
+          if (num_of_turns % 2 == 0) {
 					  printf("%d touched, ", i);
-					  react(i);
+					  react(cap_node);
             printf("React Completed\n");
           }
 				}
@@ -119,7 +57,7 @@ int main() {
 }
 
 
-///////// TOP LEVEL FUNCTIONS ///////////
+///////// FUNCTIONS ///////////
 
 void react(int zoneActivated) {
 
@@ -139,8 +77,10 @@ void react(int zoneActivated) {
 
   moveFace(newPosition);
   printf("Face has been moved\n");
+
   LEDDarken(ledIndex);
   printf("LED's darkened\n");
+
   delay(300);
   HeadPosition middlePosition = {NECKMIDDLE, HEADSTRAIGHT};
   moveFace(middlePosition);

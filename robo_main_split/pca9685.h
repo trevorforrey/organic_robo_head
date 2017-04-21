@@ -24,6 +24,6 @@
 #define ALLLED_OFF_H 0xFD
 
 ///////// PCA 9685 PROTOTYPES ///////////
-void resetPCA9685();
-void setPWM(uint8_t pwm_index, uint16_t on, uint16_t off);
-void setPWMFreq(float freq);
+void resetPCA9685(int fd_pwm);
+void setPWM(uint8_t pwm_index, uint16_t on, uint16_t off, int fd_pwm);
+void setPWMFreq(float freq, int fd_pwm);
