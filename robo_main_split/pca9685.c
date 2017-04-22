@@ -1,3 +1,8 @@
+#include <stdint.h>
+#include <wiringPiI2C.h>
+#include <wiringPi.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "pca9685.h"
 
 ///////// PCA 9685 FUNCTIONS ///////////

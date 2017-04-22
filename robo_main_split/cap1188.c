@@ -1,3 +1,8 @@
+#include <stdint.h>
+#include <wiringPiI2C.h>
+#include <wiringPi.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "cap1188.h"
 
 ///////// CAP 1188 FUNCTIONS ///////////
