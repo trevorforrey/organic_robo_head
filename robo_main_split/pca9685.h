@@ -27,3 +27,5 @@
 void resetPCA9685(int fd_pwm);
 void setPWM(uint8_t pwm_index, uint16_t on, uint16_t off, int fd_pwm);
 void setPWMFreq(float freq, int fd_pwm);
+
+#endif

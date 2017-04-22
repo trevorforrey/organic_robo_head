@@ -44,7 +44,7 @@ int main() {
 				if (touched_caps & (1 << cap_node)) {
           num_of_turns++;
           if (num_of_turns % 2 == 0) {
-					  printf("%d touched, ", i);
+					  printf("%d touched, ", cap_node);
 					  react(cap_node);
             printf("React Completed\n");
           }
