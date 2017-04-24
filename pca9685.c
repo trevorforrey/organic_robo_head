@@ -18,12 +18,12 @@ void setPWMFreq(float freq, int fd_pwm) {
  	uint8_t prescale = (prescaleval + 0.5);
 
  	uint8_t oldmode = wiringPiI2CReadReg8(fd_pwm, PCA9685_MODE1);
- 	uint8_t newmode = (oldmode&0x7F) | 0x10; // sleep
- 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_MODE1, newmode); // go to sleep
- 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_PRESCALE, prescale); // set the prescaler
+ 	uint8_t newmode = (oldmode&0x7F) | 0x10;
+ 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_MODE1, newmode);
+ 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_PRESCALE, prescale);
  	wiringPiI2CWriteReg8(fd_pwm, PCA9685_MODE1, oldmode);
  	delay(5);
- 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_MODE1, oldmode | 0xa1);  //  This sets the MODE1 register to turn on auto increment.
+ 	wiringPiI2CWriteReg8(fd_pwm, PCA9685_MODE1, oldmode | 0xa1);
 }
 
 

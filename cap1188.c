@@ -15,9 +15,9 @@ void cap1188info(int fd_cap) {
 
 
 void setUpLEDTouch(int fd_cap) {
-	wiringPiI2CWriteReg8(fd_cap,CAP1188_MTBLK, 0); // Allow multiple touches
-	wiringPiI2CWriteReg8(fd_cap,CAP1188_LEDLINK, 0xFF); // Have LEDs follow touch
-	wiringPiI2CWriteReg8(fd_cap,CAP1188_STANDBYCFG, 0x30); // speed up a bit
+	wiringPiI2CWriteReg8(fd_cap,CAP1188_MTBLK, 0);
+	wiringPiI2CWriteReg8(fd_cap,CAP1188_LEDLINK, 0xFF);
+	wiringPiI2CWriteReg8(fd_cap,CAP1188_STANDBYCFG, 0x30);
 }
 
 
